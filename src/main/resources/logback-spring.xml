@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 文件输出格式 -->
+    <property name="PATTERN" value="%-12(%d{yyyy-MM-dd HH:mm:ss.SSS})|%level|%X{userId}|api|%X{requestURI}|%X{traceId}|%X{requestIP}|%X{hostIP}|%X{requestTime}|%thread|%c{10}|%L|%msg%n" />
+    <!-- test和线上环境文件路径 -->
+    <property name="FILE_PATH" value="/data/logs/zangSpringboot/" />
+    <property name="LOG_NAME" value="zangSpringboot" />
+
+    <!-- 本地环境 -->
+    <springProfile name="local">
+        <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${PATTERN}</pattern>
+            </encoder>
+        </appender>
+        <root level="info">
+            <appender-ref ref="console" />
+        </root>
+    </springProfile>
+
+    <!-- 测试及线上环境 -->
+    <springProfile name="test,prod">
+        <!-- 每天产生一个文件 -->
+        <appender name="tp_file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${FILE_PATH}${LOG_NAME}.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <!-- rollover daily -->
+                <fileNamePattern>${FILE_PATH}${LOG_NAME}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <!-- each file should be at most 100MB, keep 60 days worth of history, but at most 20GB -->
+                <maxHistory>30</maxHistory>
+                <maxFileSize>100MB</maxFileSize>
+                <totalSizeCap>20GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>
+                    ${PATTERN}
+                </pattern>
+            </encoder>
+        </appender>
+        <logger name ="com.xxl" level ="ERROR" />
+        <root level="info">
+            <appender-ref ref="tp_file" />
+        </root>
+    </springProfile>
+
+
+
+</configuration>
