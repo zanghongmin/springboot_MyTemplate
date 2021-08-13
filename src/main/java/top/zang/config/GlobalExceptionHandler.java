@@ -1,11 +1,6 @@
 package top.zang.config;
 
 
-import top.zang.config.token.TokenException;
-import top.zang.core.MyException;
-import top.zang.core.ReturnT;
-import top.zang.core.ReturnTEnum;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -15,6 +10,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import top.zang.config.token.TokenException;
+import top.zang.core.ReturnT;
+import top.zang.core.exception.MyException;
+import top.zang.core.exception.ReturnTEnum;
 import top.zang.util.MyJsonUtil;
 import top.zang.util.MyRedisUtil;
 
@@ -48,7 +47,11 @@ public class GlobalExceptionHandler {
             FieldError error = ((BindException)ex).getBindingResult().getFieldErrors().get(0);
             errorResult = ReturnT.Common(ReturnTEnum.BAD_REQUEST, error.getDefaultMessage());
         }else if( ex instanceof MyException){
-            errorResult = ReturnT.Fail(ex.getMessage());
+            if(((MyException) ex).getReturnTEnum()==null){
+                errorResult = ReturnT.Fail(ex.getMessage());
+            }else{
+                errorResult = ReturnT.Common(((MyException) ex).getReturnTEnum());
+            }
         }else{
             logger.error("统一异常处理,请求URI:{},请求方式:{},异常内容:{}", request.getRequestURI(), request.getMethod(), ex.getMessage());
             errorResult = ReturnT.Fail("服务器开小差，请重试");

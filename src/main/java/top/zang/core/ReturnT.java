@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import top.zang.core.exception.ReturnTEnum;
 
 import java.io.IOException;
 
@@ -16,9 +18,10 @@ import java.io.IOException;
  * 统一返回对象
  */
 @ApiModel(value="统一返回对象")
+@Data
 public class ReturnT<T> {
     private static final Logger logger = LoggerFactory.getLogger(ReturnT.class);
-    public static final int FAIL_CODE = ReturnTEnum.HTTP_ERROR_500.getCode();
+    public static final int FAIL_CODE = ReturnTEnum.ERROR.getCode();
     private static ObjectMapper objectMapper = new ObjectMapper();
     static {
         objectMapper.getSerializerProvider().setNullValueSerializer(new JsonSerializer<Object>() {
@@ -55,7 +58,7 @@ public class ReturnT<T> {
     }
     public static ReturnT  Fail() {
         ReturnT returnT = new ReturnT();
-        returnT.code =  ReturnTEnum.HTTP_ERROR_500.getCode();
+        returnT.code =  FAIL_CODE;
         returnT.msg =  "error";
         returnT.result = null;
         printLog(returnT);
@@ -63,7 +66,7 @@ public class ReturnT<T> {
     }
     public static ReturnT  Fail(String msg) {
         ReturnT returnT = new ReturnT();
-        returnT.code =  ReturnTEnum.HTTP_ERROR_500.getCode();
+        returnT.code =  FAIL_CODE;
         returnT.msg =  msg;
         returnT.result = null;
         printLog(returnT);
@@ -71,7 +74,7 @@ public class ReturnT<T> {
     }
     public static <T> ReturnT<T>  Fail(String msg,T result) {
         ReturnT returnT = new ReturnT();
-        returnT.code =  ReturnTEnum.HTTP_ERROR_500.getCode();
+        returnT.code =  FAIL_CODE;
         returnT.msg =  msg;
         returnT.result = result;
         printLog(returnT);
@@ -111,26 +114,5 @@ public class ReturnT<T> {
                 logger.error("返回成功结果日志解析失败:{}",e.getMessage());
             }
         }
-    }
-
-	public int getCode() {
-		return code;
-	}
-	public void setCode(int code) {
-		this.code = code;
-	}
-	public String getMsg() {
-		return msg;
-	}
-	public void setMsg(String msg) {
-		this.msg = msg;
-	}
-
-    public T getResult() {
-        return result;
-    }
-
-    public void setResult(T result) {
-        this.result = result;
     }
 }

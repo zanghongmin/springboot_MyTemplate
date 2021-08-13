@@ -1,8 +1,10 @@
 package top.zang.config.validator;
 
-import top.zang.core.MyException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import top.zang.core.exception.MyException;
+import top.zang.core.exception.ReturnTEnum;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -25,9 +27,7 @@ public class EnumValidatorClass implements ConstraintValidator<EnumValidator, Ob
         Object[] objects = clz.getEnumConstants();
         try {
             Method method = clz.getMethod("getCode");
-            if (Objects.isNull(method)) {
-                throw new MyException(String.format("枚举对象{}缺少字段名为code的字段",clz.getName()));
-            }
+            ReturnTEnum.ERROR.isEmpty(method,String.format("枚举对象{}缺少字段名为code的字段",clz.getName()));
             Object value;
             for (Object obj : objects) {
                 value = method.invoke(obj);

@@ -6,7 +6,8 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import top.zang.config.token.MyToken;
-import top.zang.core.MyException;
+import top.zang.core.exception.MyException;
+import top.zang.core.exception.ReturnTEnum;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
@@ -52,9 +53,7 @@ public class MyJwtUtil {
      * @return
      */
     public static MyToken parseJwt(String jwt){
-        if (StrUtil.isEmpty(jwt)) {
-            throw new MyException("Token不能为空");
-        }
+        ReturnTEnum.ERROR.isEmpty(jwt,"Token不能为空");
         Claims claims = Jwts.parser()
                 .setSigningKey(DatatypeConverter.parseBase64Binary(DEFAULT_SECRETE))
                 .parseClaimsJws(jwt).getBody();

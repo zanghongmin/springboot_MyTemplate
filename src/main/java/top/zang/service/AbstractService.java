@@ -5,7 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import top.zang.config.token.MyToken;
-import top.zang.core.MyException;
+import top.zang.core.exception.MyException;
+import top.zang.core.exception.ReturnTEnum;
 import top.zang.dao.TUserDODao;
 import top.zang.dao.TUserFeedbackDODao;
 import top.zang.mbg.model.TUserDO;
@@ -24,9 +25,7 @@ public abstract class AbstractService {
 
     public TUserDO getTUserDOFromToken(MyToken myToken){
         TUserDO tuserDO = tuserDODao.selectByPrimaryKey(myToken.getUserId());
-        if(tuserDO==null){
-            throw  new MyException("获取用户失败");
-        }
+        ReturnTEnum.ERROR.isEmpty(tuserDO,"获取用户失败");
         return tuserDO;
     }
 

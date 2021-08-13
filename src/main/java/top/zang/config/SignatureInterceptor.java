@@ -10,7 +10,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import top.zang.config.bodyReader.RequestWrapper;
 import top.zang.config.token.MyToken;
-import top.zang.core.MyException;
+import top.zang.core.exception.ReturnTEnum;
 import top.zang.util.MyIpUtil;
 import top.zang.util.MyJwtUtil;
 import top.zang.util.MyRedisUtil;
@@ -164,14 +164,11 @@ public class SignatureInterceptor implements HandlerInterceptor{
                 }
             }
             logger.info("您点击太快!请稍等");
-            throw new MyException("您点击太快!请稍等");
+            ReturnTEnum.ERROR.throwException("您点击太快!请稍等");
         }
     }
-
     public static String getInterfaceLimitKey(String servletPath,Integer userId){
-        if(StrUtil.isBlank(servletPath) || userId==null){
-            throw new MyException("接口限制配置出错");
-        }
+        ReturnTEnum.ERROR.isTrue(StrUtil.isBlank(servletPath) || userId==null , "接口限制配置出错");
         String redisKey = "interfaceLimit:"+userId + ":" + servletPath;
         return redisKey;
     }
