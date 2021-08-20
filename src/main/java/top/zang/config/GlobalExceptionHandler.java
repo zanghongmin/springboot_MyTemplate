@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     */
     @ExceptionHandler(value = Exception.class)
     public ReturnT defaultErrorHandler(HttpServletRequest request, Exception ex) throws Exception {
-        Integer userId = SignatureInterceptor.threadLocal_userid.get();
+        Long userId = SignatureInterceptor.threadLocal_userid.get();
         String requestUri = request.getRequestURI();
         if(userId!=null){
             myRedisUtil.del(SignatureInterceptor.getInterfaceLimitKey(requestUri,userId));
@@ -50,7 +50,12 @@ public class GlobalExceptionHandler {
             if(((MyException) ex).getReturnTEnum()==null){
                 errorResult = ReturnT.Fail(ex.getMessage());
             }else{
-                errorResult = ReturnT.Common(((MyException) ex).getReturnTEnum());
+                ReturnTEnum returnTEnum = ((MyException) ex).getReturnTEnum();
+                String msg = ex.getMessage();
+                if(msg==null){
+                    msg = returnTEnum.getMsg();
+                }
+                errorResult = ReturnT.Common(returnTEnum.getCode(),msg);
             }
         }else{
             logger.error("统一异常处理,请求URI:{},请求方式:{},异常内容:{}", request.getRequestURI(), request.getMethod(), ex.getMessage());

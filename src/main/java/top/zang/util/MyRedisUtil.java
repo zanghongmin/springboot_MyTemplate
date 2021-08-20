@@ -19,10 +19,6 @@ public class MyRedisUtil {
     public MyRedisUtil(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
-    //token信息前缀
-    public static final String REQUEST_TOKEN_PREFIX = "token:";
-    //短信验证码信息前缀
-    public static final String REQUEST_VCODE_PREFIX = "vcode:";
     /**
      * 指定缓存失效时间
      * @param key 键

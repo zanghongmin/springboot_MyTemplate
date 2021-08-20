@@ -12,4 +12,5 @@ public class Constant {
     public final static int maxPagesize = 9999;
     //设置为空时字符串 []  ， 统一使用json格式存储
     public final static String ids_null = "[]";
+
 }

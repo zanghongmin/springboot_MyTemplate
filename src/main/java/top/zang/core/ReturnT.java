@@ -80,6 +80,15 @@ public class ReturnT<T> {
         printLog(returnT);
         return returnT;
     }
+
+    public static <T> ReturnT<T>  Common(int code,String msg) {
+        ReturnT returnT = new ReturnT();
+        returnT.code =  code;
+        returnT.msg =  msg;
+        returnT.result = null;
+        printLog(returnT);
+        return returnT;
+    }
     public static <T> ReturnT<T>  Common(ReturnTEnum resultStatusCode) {
         ReturnT returnT = new ReturnT();
         returnT.code =  resultStatusCode.getCode();

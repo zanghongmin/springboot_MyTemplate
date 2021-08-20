@@ -7,9 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ItemStatusEnum {
 
-    NORMAL(0, "正常"),
-    FROZEN(1, "禁用");
-    private int code;
+    NORMAL((byte)0, "正常"),
+    FROZEN((byte)1, "禁用");
+    private byte code;
     private String value;
 
 }

@@ -9,6 +9,10 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import top.zang.core.RedisKey;
+import top.zang.dao.AdminDODao;
+import top.zang.enums.UserSourceTypeEnum;
+import top.zang.mbg.model.AdminDO;
 import top.zang.util.MyJwtUtil;
 import top.zang.util.MyRedisUtil;
 
@@ -23,7 +27,8 @@ public class TokenArgumentResolver implements HandlerMethodArgumentResolver {
 
     @Resource
     MyRedisUtil myRedisUtil;
-
+    @Resource
+    AdminDODao adminDODao;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -40,11 +45,25 @@ public class TokenArgumentResolver implements HandlerMethodArgumentResolver {
         }
         try {
             MyToken token = MyJwtUtil.parseJwt(tokenKey);
-//            String rediskey = MyRedisUtil.getLoginKey(token.getUserId());
-//            Object object = myRedisUtil.get(rediskey);
-//            if(object==null || StrUtil.isEmpty(object.toString()) || !tokenKey.equals(object.toString())){
-//                throw new TokenException("token不一致，请重新登录");
-//            }
+            String rediskey = RedisKey.getLoginKey(token.getUserId(),token.getUserSource());
+            Object object = myRedisUtil.get(rediskey);
+            if(object==null || StrUtil.isEmpty(object.toString()) || !tokenKey.equals(object.toString())){
+                throw new TokenException("token不一致，请重新登录");
+            }
+            if(UserSourceTypeEnum.backend.getCode().equals(token.getUserSource())){
+                AdminDO adminDO = adminDODao.selectByPrimaryKey(token.getUserId());
+                if(adminDO==null){
+                    throw new TokenException("token后台用户数据不对");
+                }
+                token.setUserinfo(adminDO);
+                //adminDO.getAdmin_role_ids()
+
+
+            }else if(UserSourceTypeEnum.app.getCode().equals(token.getUserSource())){
+                token.setUserinfo(null);
+            }else{
+                throw new TokenException("token错误");
+            }
             return token;
         }catch (TokenException ex){
             throw new TokenException(ex.getDetailMessage());

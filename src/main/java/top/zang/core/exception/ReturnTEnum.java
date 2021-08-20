@@ -38,10 +38,9 @@ public enum ReturnTEnum implements IAssert<MyException> {
     }
     public MyException ofException(Object... args) {
         Object msg = args[0];
-        Object object1 = msg;
-        MyException code;
-        if (object1 instanceof MyException && (code = (MyException)object1) == (MyException)object1)
-            return new MyException(code.getMessage(),this);
+        if(msg==null || StrUtil.isEmpty(msg.toString())){
+            return new MyException(this.msg,this);
+        }
         return new MyException(String.valueOf(msg),this);
     }
 }

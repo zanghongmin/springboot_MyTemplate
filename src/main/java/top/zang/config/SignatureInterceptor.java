@@ -37,7 +37,7 @@ public class SignatureInterceptor implements HandlerInterceptor{
     private final static String hostIP = "hostIP"; //hostIP
     private static String hostIPValue = ""; //hostIPValue
     private static final ThreadLocal<Long> threadLocal = new ThreadLocal();
-    public static final ThreadLocal<Integer> threadLocal_userid = new ThreadLocal();
+    public static final ThreadLocal<Long> threadLocal_userid = new ThreadLocal();
     @Resource
     public MyRedisUtil myRedisUtil;
 
@@ -115,7 +115,7 @@ public class SignatureInterceptor implements HandlerInterceptor{
         Long endtime = System.currentTimeMillis();
         String requestUri = request.getRequestURI();
         String requestMethod = request.getMethod();
-        Integer userId = threadLocal_userid.get();
+        Long userId = threadLocal_userid.get();
         if(userId!=null){
             myRedisUtil.del(getInterfaceLimitKey(requestUri,userId));
         }
@@ -147,7 +147,7 @@ public class SignatureInterceptor implements HandlerInterceptor{
     }
 
     //接口限制，一个用户一个接口同时并发只能访问一次
-    private void interfaceLimit(String requestUri,Integer userId) throws Exception{
+    private void interfaceLimit(String requestUri,Long userId) throws Exception{
         String redisKey = getInterfaceLimitKey(requestUri,userId);
         long count = myRedisUtil.incr(redisKey, 1);
         if(count == 1) {
@@ -167,7 +167,7 @@ public class SignatureInterceptor implements HandlerInterceptor{
             ReturnTEnum.ERROR.throwException("您点击太快!请稍等");
         }
     }
-    public static String getInterfaceLimitKey(String servletPath,Integer userId){
+    public static String getInterfaceLimitKey(String servletPath,Long userId){
         ReturnTEnum.ERROR.isTrue(StrUtil.isBlank(servletPath) || userId==null , "接口限制配置出错");
         String redisKey = "interfaceLimit:"+userId + ":" + servletPath;
         return redisKey;

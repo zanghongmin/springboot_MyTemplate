@@ -3,32 +3,33 @@ package top.zang.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import top.zang.config.token.MyToken;
-import top.zang.core.exception.MyException;
-import top.zang.core.exception.ReturnTEnum;
-import top.zang.dao.TUserDODao;
-import top.zang.dao.TUserFeedbackDODao;
-import top.zang.mbg.model.TUserDO;
+import top.zang.dao.*;
+import top.zang.dto.backend.AdminMenuMeta;
+import top.zang.dto.backend.AdminMenuVo;
+import top.zang.mbg.model.AdminDO;
+import top.zang.mbg.model.AdminMenuDO;
+import top.zang.util.MyRedisUtil;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
 public abstract class AbstractService {
     public static final Logger logger = LoggerFactory.getLogger(AbstractService.class);
-
     @Resource
-    TUserDODao tuserDODao;
+    AdminDODao adminDODao;
     @Resource
-    TUserFeedbackDODao tuserFeedbackDODao;
-
-    public TUserDO getTUserDOFromToken(MyToken myToken){
-        TUserDO tuserDO = tuserDODao.selectByPrimaryKey(myToken.getUserId());
-        ReturnTEnum.ERROR.isEmpty(tuserDO,"获取用户失败");
-        return tuserDO;
-    }
-
-
-
+    AdminMenuDODao adminMenuDODao;
+    @Resource
+    AdminResourceCategoryDODao adminResourceCategoryDODao;
+    @Resource
+    AdminResourceDODao adminResourceDODao;
+    @Resource
+    AdminRoleDODao adminRoleDODao;
+    @Resource
+    MyRedisUtil myRedisUtil;
 }
