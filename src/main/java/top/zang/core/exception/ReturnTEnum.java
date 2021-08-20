@@ -1,5 +1,7 @@
 package top.zang.core.exception;
 
+import cn.hutool.core.util.StrUtil;
+
 /**
  * 类描述: 主要时用于返回错误码和错误信息
  */
@@ -34,7 +36,6 @@ public enum ReturnTEnum implements IAssert<MyException> {
         this.code = code;
         this.msg = msg;
     }
-
     public MyException ofException(Object... args) {
         Object msg = args[0];
         Object object1 = msg;
