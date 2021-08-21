@@ -1,9 +1,12 @@
 package top.zang.config.token;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiParam;
 import lombok.Data;
 import lombok.ToString;
+import springfox.documentation.annotations.ApiIgnore;
 import top.zang.mbg.model.AdminResourceDO;
 
 import java.util.List;
@@ -28,9 +31,9 @@ public class MyToken {
     @JsonIgnore
     private Object userinfo;
 
-    @ApiModelProperty(value = "后台用户接口资源类",hidden=true)
+    @ApiModelProperty(value = "后台用户接口资源类 List<AdminResourceDO>",hidden=true)
     @JsonIgnore
-    private List<AdminResourceDO> adminResourceDOs;
+    private Object adminResourceDOs;
 
     @Override
     public String toString() {

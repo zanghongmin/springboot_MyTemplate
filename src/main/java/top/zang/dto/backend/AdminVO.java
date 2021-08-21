@@ -23,7 +23,7 @@ public class AdminVO {
     private String login_name;
 
     @ApiModelProperty(value = "后台用户角色ids,json格式")
-    private List<Long> admin_role_ids;
+    private List<Object> admin_role_ids;
 
     @ApiModelProperty(value = "用户名称")
     private String name;

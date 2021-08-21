@@ -1,16 +1,20 @@
 package top.zang.config;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import top.zang.config.bodyReader.RequestWrapper;
 import top.zang.config.token.MyToken;
 import top.zang.core.exception.ReturnTEnum;
+import top.zang.enums.UserSourceTypeEnum;
+import top.zang.mbg.model.AdminResourceDO;
 import top.zang.util.MyIpUtil;
 import top.zang.util.MyJwtUtil;
 import top.zang.util.MyRedisUtil;
@@ -21,13 +25,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Component
-public class SignatureInterceptor implements HandlerInterceptor{
+public class SignatureInterceptor implements HandlerInterceptor {
     private static final Logger logger = LoggerFactory.getLogger(SignatureInterceptor.class);
     private final static String userId = "userId"; //用户id
     private final static String requestURI = "requestURI"; //请求URI
@@ -42,7 +43,7 @@ public class SignatureInterceptor implements HandlerInterceptor{
     public MyRedisUtil myRedisUtil;
 
     @PostConstruct
-    public void hostIPValue(){
+    public void hostIPValue() {
         try {
             InetAddress inet = InetAddress.getLocalHost();
             //当前机器的ip
@@ -56,8 +57,9 @@ public class SignatureInterceptor implements HandlerInterceptor{
     public static Set<String> limit_paths = new HashSet<>();
     //对于一些为上传文件的接口，不打印包体日志
     public static Set<String> upload_paths = new HashSet<>();
+
     static {
-        //接口限制
+        //接口点击次数限制
         limit_paths.add("/user/user_feedback");
 
         //上传文件
@@ -70,13 +72,13 @@ public class SignatureInterceptor implements HandlerInterceptor{
         threadLocal_userid.remove();
         String requestUri = request.getRequestURI();
         String requestMethod = request.getMethod();
-        String  requestbody = "";
-        if(upload_paths.contains(requestUri)){ // 上传图片等不打印，请求内容
+        String requestbody = "";
+        if (upload_paths.contains(requestUri)) { // 上传图片等不打印，请求内容
             requestbody = getAllRequestParam(request);
-        }else {
+        } else {
             if (requestMethod.toLowerCase().equals("get")) {
                 requestbody = getAllRequestParam(request);
-            } else if (requestMethod.toLowerCase().equals("post"))  {
+            } else if (requestMethod.toLowerCase().equals("post")) {
                 RequestWrapper requestWrapper = new RequestWrapper(request);
                 requestbody = requestWrapper.getBody();
             }
@@ -84,27 +86,29 @@ public class SignatureInterceptor implements HandlerInterceptor{
         MDC.clear();
         MDC.put(hostIP, hostIPValue);
         MDC.put(requestIP, MyIpUtil.getIpAddr(request));
-        MDC.put(requestURI, CommandLineRunnerConfig.requestURIName.get(requestUri)==null?requestUri:CommandLineRunnerConfig.requestURIName.get(requestUri));
-        MDC.put(traceID, UUID.randomUUID().toString().replaceAll("-",""));
-        try{
+        MDC.put(requestURI, CommandLineRunnerConfig.requestURIName.get(requestUri) == null ? requestUri : CommandLineRunnerConfig.requestURIName.get(requestUri));
+        MDC.put(traceID, UUID.randomUUID().toString().replaceAll("-", ""));
+        try {
             String tokenKey = request.getHeader(MyToken.Authorization_TOKEN);
-            if(StrUtil.isNotBlank(tokenKey)){
+            if (StrUtil.isNotBlank(tokenKey)) {
                 MyToken token = MyJwtUtil.parseJwt(tokenKey);
-                if(token!=null){
-                    MDC.put(userId, token.getUserId()+"");
-                    if(limit_paths.contains(requestUri)){
+                if (token != null) {
+                    MDC.put(userId, token.getUserId() + "");
+                    //接口限制，一个用户一个接口同时并发只能访问一次
+                    if (limit_paths.contains(requestUri)) {
                         threadLocal_userid.set(token.getUserId());
-                        interfaceLimit(requestUri,token.getUserId());
+                        interfaceLimit(requestUri, token.getUserId());
                     }
                 }
 
             }
-        }catch (Exception e){
-            logger.warn("获取token属性错误:{}",  e.getMessage());
+        } catch (Exception e) {
+            logger.warn("获取token属性错误:{}", e.getMessage());
         }
-        logger.info("请求成功,请求URI:{},请求方式:{},请求参数:{}",  requestUri, requestMethod, requestbody);
+        logger.info("请求成功,请求URI:{},请求方式:{},请求参数:{}", requestUri, requestMethod, requestbody);
         return true;
     }
+
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable ModelAndView modelAndView) throws Exception {
         //解决中文乱码
@@ -116,11 +120,11 @@ public class SignatureInterceptor implements HandlerInterceptor{
         String requestUri = request.getRequestURI();
         String requestMethod = request.getMethod();
         Long userId = threadLocal_userid.get();
-        if(userId!=null){
-            myRedisUtil.del(getInterfaceLimitKey(requestUri,userId));
+        if (userId != null) {
+            myRedisUtil.del(getInterfaceLimitKey(requestUri, userId));
         }
-        MDC.put(requestTime, (endtime-starttime)+"");
-        logger.info("响应成功,请求URI:{},请求方式:{},耗时时间:{}ms", requestUri, requestMethod,(endtime-starttime));
+        MDC.put(requestTime, (endtime - starttime) + "");
+        logger.info("响应成功,请求URI:{},请求方式:{},耗时时间:{}ms", requestUri, requestMethod, (endtime - starttime));
         MDC.clear();
     }
 
@@ -147,18 +151,18 @@ public class SignatureInterceptor implements HandlerInterceptor{
     }
 
     //接口限制，一个用户一个接口同时并发只能访问一次
-    private void interfaceLimit(String requestUri,Long userId) throws Exception{
-        String redisKey = getInterfaceLimitKey(requestUri,userId);
+    private void interfaceLimit(String requestUri, Long userId) throws Exception {
+        String redisKey = getInterfaceLimitKey(requestUri, userId);
         long count = myRedisUtil.incr(redisKey, 1);
-        if(count == 1) {
+        if (count == 1) {
             myRedisUtil.expire(redisKey, 2);//默认超时时间2秒
-        }else{
+        } else {
             Thread.sleep(160);
-            if(myRedisUtil.getExpire(redisKey)==0){
+            if (myRedisUtil.getExpire(redisKey) == 0) {
                 logger.warn("当前交易limit Key过期为0");
                 //防止极端情况客户一直请求不了
                 Thread.sleep(2000);
-                if(myRedisUtil.hasKey(redisKey) && myRedisUtil.getExpire(redisKey)==0){
+                if (myRedisUtil.hasKey(redisKey) && myRedisUtil.getExpire(redisKey) == 0) {
                     logger.error("极端情况客户正常请求被阻碍，删除limit Key");
                     myRedisUtil.del(redisKey);
                 }
@@ -167,9 +171,14 @@ public class SignatureInterceptor implements HandlerInterceptor{
             ReturnTEnum.ERROR.throwException("您点击太快!请稍等");
         }
     }
-    public static String getInterfaceLimitKey(String servletPath,Long userId){
-        ReturnTEnum.ERROR.isTrue(StrUtil.isBlank(servletPath) || userId==null , "接口限制配置出错");
-        String redisKey = "interfaceLimit:"+userId + ":" + servletPath;
+
+    public static String getInterfaceLimitKey(String servletPath, Long userId) {
+        ReturnTEnum.ERROR.isTrue(StrUtil.isBlank(servletPath) || userId == null, "接口限制配置出错");
+        String redisKey = "interfaceLimit:" + userId + ":" + servletPath;
         return redisKey;
     }
+
+
+
+
 }

@@ -19,10 +19,7 @@ import top.zang.core.exception.ReturnTEnum;
 import top.zang.dto.backend.*;
 import top.zang.enums.ItemStatusEnum;
 import top.zang.enums.UserSourceTypeEnum;
-import top.zang.mbg.model.AdminDO;
-import top.zang.mbg.model.AdminDOExample;
-import top.zang.mbg.model.AdminMenuDO;
-import top.zang.mbg.model.AdminMenuDOExample;
+import top.zang.mbg.model.*;
 import top.zang.util.MyJsonUtil;
 import top.zang.util.MyJwtUtil;
 import top.zang.util.MyMd5Util;
@@ -107,10 +104,17 @@ public class BackendCommonService extends AbstractBackendService {
             if(admin_role_ids.size()<=0){
                 return ReturnT.Success(adminMenuVos);
             }
-
-
-
-            adminMenuDOExample.createCriteria().andStatusEqualTo(ItemStatusEnum.NORMAL.getCode()).andIdIn(admin_role_ids);
+            AdminRoleDOExample adminRoleDOExample = new AdminRoleDOExample();
+            adminRoleDOExample.createCriteria().andIdIn(admin_role_ids).andStatusEqualTo(ItemStatusEnum.NORMAL.getCode());
+            List<AdminRoleDO> adminRoleDOs = adminRoleDODao.selectByExample(adminRoleDOExample);
+            List<Long> admin_menu_ids = new ArrayList<>();
+            adminRoleDOs.forEach(a->{
+                admin_menu_ids.addAll(MyJsonUtil.parseObject(a.getAdmin_menu_ids(),List.class));
+            });
+            if(admin_menu_ids.size()<=0){
+                return ReturnT.Success(adminMenuVos);
+            }
+            adminMenuDOExample.createCriteria().andIdIn(admin_menu_ids).andStatusEqualTo(ItemStatusEnum.NORMAL.getCode());
         }
         List<AdminMenuDO> adminMenuDOs = adminMenuDODao.selectByExample(adminMenuDOExample);
         List<AdminMenuVo> result = adminMenuDOs.stream()
