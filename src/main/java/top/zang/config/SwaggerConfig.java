@@ -23,7 +23,6 @@ public class SwaggerConfig {
 
     @Value("${swagger.enable}")
     private boolean swaggerEnable;
-
     String web_package = "top.zang.controller";
     String title = "springboot自定义模板系统";
     String version = "1.0";
@@ -43,7 +42,6 @@ public class SwaggerConfig {
             }
         return docket;
     }
-
 
     private List<SecurityScheme> securitySchemes() {
         //设置请求头信息
